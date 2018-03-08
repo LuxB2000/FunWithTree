@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace FunWithTree
 {
@@ -131,7 +132,7 @@ namespace FunWithTree
         /// <returns>A <see cref="T:System.String"/> that represents the current <see cref="T:FunWithTree.NodeTree`1"/>.</returns>
         public override string ToString()
         {
-            return string.Format("Node [{0}]:{1}, {2} siblings", this.ID, this.Data, this.Siblings.Count);
+            return string.Format("{0}, {1} siblings", this.Data, this.Siblings.Count);
         }
     }
 
@@ -171,9 +172,8 @@ namespace FunWithTree
         public NodeType Root { 
             get { return m_root; }
             set
-            { 
+            {
                 this.m_root = value;
-                this.m_to_visit.Add(this.Root);
             }
         }
         /// <summary>
@@ -200,36 +200,38 @@ namespace FunWithTree
         {
             this.ID = Guid.NewGuid();
             this.m_grammar = g;
+            this.Root.Data.Depth = 0;
+            this.Root.Data.Text = this.Grammar.StartSymbols[0]; // TODO: be more generic
+            this.m_to_visit.Add(this.Root);
         }
         /// <summary>
         /// Parses and builds the tree up to a maximal depth.
+        /// TODO: put in dedicated parser.
         /// </summary>
-        /// <param name="curr_depth">Curr depth.</param>
         /// <param name="max_depth">Max depth.</param>
-        public void ParseUpToDepth(int curr_depth, int max_depth){
-            if( curr_depth == max_depth || this.m_to_visit.Count == 0 )
-            {
-                return;
-            }else
+        public void ParseUpToDepth(int max_depth){
+            while (this.m_to_visit.Count > 0)
             {
                 // pop the first element of the list
                 this.Current = this.m_to_visit[0];
                 this.m_to_visit.RemoveAt(0);
-                System.Console.WriteLine(this.Current);
+                if (this.Current.Data.Depth <= max_depth)
+                {
+                    System.Console.WriteLine(this.Current);
+                    Console.WriteLine("\t{0} nodes to visit", this.m_to_visit.Count);
 
-                // build the children of the current node
-                //List<NodeType> sublings = this.Current.
-
-                // recursive call
-                this.ParseUpToDepth(curr_depth + 1, max_depth);
+                    // build the children of the current node
+                    List<NodeType> sublings = this.GenerateSiblings(this.Current);
+                    this.m_to_visit.AddRange(sublings);
+                }
             }
         }
 
         /// <summary>
         /// Generates the sibling.
+        /// TODO: put in dedicated parser
         /// </summary>
         /// <returns>The sibling.</returns>
-
         public List<NodeType> GenerateSiblings(NodeType n)
         {
             // based on the current NodeData, generate a list of NodeData 
@@ -237,23 +239,34 @@ namespace FunWithTree
             // S->SS
             // S->(S)
             // S->()
-            int i = 0;
+            int i = 0, p = 0, L = n.Data.Text.Length;
             string[] start_symbol = this.Grammar.StartSymbols;
             string[] rules = this.Grammar.Rules;
-
-            int p = n.Data.Text.IndexOf(start_symbol[i], 0, StringComparison.CurrentCulture);
             List<NodeType> l = new List<NodeType> { };
 
-
-            foreach (string rule in rules)
+            // no need to parse the current node if there is no start symbol
+            if (n.Data.Text.IndexOf(start_symbol[i], StringComparison.CurrentCulture) != -1)
             {
-                string sibling_text = n.Data.Text.Replace(start_symbol[i], rule);
-                NodeType sibling = new NodeType();
-                sibling.Data.Text = sibling_text;
-                sibling.Data.Depth = n.Data.Depth + 1;
-                l.Insert(0, sibling);
+                foreach (string rule in rules)
+                {
+                    p = n.Data.Text.IndexOf(start_symbol[i], 0, StringComparison.CurrentCulture);
+                    while (p != -1)
+                    {
+                        StringBuilder sibling_text = new StringBuilder(n.Data.Text);
+                        sibling_text.Remove(p, 1); // remove the start symbol
+                        sibling_text.Insert(p, rule); // insert the rule
 
+                        NodeType sibling = new NodeType();
+                        sibling.Data.Text = sibling_text.ToString();
+                        sibling.Data.Depth = n.Data.Depth + 1;
+                        l.Insert(0, sibling);
+
+                        p = n.Data.Text.IndexOf(start_symbol[i], p+1, StringComparison.CurrentCulture);
+                    }
+
+                }
             }
+
 
             return l;
         }

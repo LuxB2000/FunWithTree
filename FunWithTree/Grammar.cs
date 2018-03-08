@@ -9,6 +9,10 @@ namespace FunWithTree
         string[] StartSymbols { get; }
         string[] Rules { get; }
     }
+
+    /// <summary>
+    /// Abstract General Context Free Grammar.
+    /// </summary>
     public abstract class GeneralCFG : IContextFreeGrammar
     {
         protected GeneralCFG() { }
@@ -16,6 +20,10 @@ namespace FunWithTree
         public abstract string[] Rules { get; }
         public abstract Guid ID { get; }
     }
+
+    /// <summary>
+    /// A simple CFC grammar generating correct parenthesis string.
+    /// </summary>
     public class SimpleCFC : GeneralCFG
     {
         private readonly string[] start_symbol = { "S" };

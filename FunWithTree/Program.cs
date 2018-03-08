@@ -10,9 +10,8 @@ namespace FunWithTree
             Console.WriteLine("Parsing a simple Context Free Gramma with Tree!");
 
             Tree<NodeTree<NodeData>, SimpleCFC> tree = new Tree<NodeTree<NodeData>, SimpleCFC>(new SimpleCFC());
-            tree.Root.Data.Text = "S";
-            tree.Root.Data.Depth = 0;
 
+            /*
             Console.WriteLine(tree.Root);
 
             List<NodeTree<NodeData>> siblings = tree.GenerateSiblings(tree.Root);
@@ -29,6 +28,10 @@ namespace FunWithTree
             {
                 Console.WriteLine(s);
             }
+            */
+
+            Console.WriteLine("Start Parsing.");
+            tree.ParseUpToDepth(3);
 
             Console.WriteLine("** That's all folks! **");
         }
